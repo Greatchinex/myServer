@@ -8,7 +8,11 @@ const UserSchema = new mongoose.Schema({
   email: {
     type: String
   },
-  password: String
+  password: String,
+  // is_admin: {
+  // 	type: Boolean,
+  // 	default: false
+  // }
 });
 
 module.exports = mongoose.model("User", UserSchema);

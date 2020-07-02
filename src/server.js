@@ -1,13 +1,18 @@
 const express = require("express");
-const bcrypt = require("bcryptjs")
+const bcrypt = require("bcryptjs");
+const dotenv = require("dotenv");
+const jwt = require("jsonwebtoken");
+
+dotenv.config();
 
 require("./config/db");
 
 const User = require("./models/user");
+const auth = require("./config/middleware")
 
 const app = express();
 app.use(express.json());
-const port = 8000;
+const port = process.env.PORT;
 
 app.get("/test", function (req, res, next) {
   res.json({
@@ -24,7 +29,7 @@ app.post("/register", async (req, res, next) => {
       return res.json({ msg: "User with email already exist" });
     }
 
-    const hashedPassword = bcrypt.hash(req.body.password, 12)
+    const hashedPassword = await bcrypt.hash(req.body.password, 12)
 
     const newUser = new User({
       fullname: req.body.fullname,
@@ -35,8 +40,14 @@ app.post("/register", async (req, res, next) => {
     // console.log(newUser);
     const savedUser = await newUser.save();
 
+    // console.log(savedUser);
+    // console.log(savedUser._id);
+
+    const token = await jwt.sign({ userId: savedUser._id }, "mysuperdupersecret")
+
     res.json({
       msg: "User created successfully",
+      userToken: token,
       user: savedUser
     });
   } catch (err) {
@@ -44,7 +55,7 @@ app.post("/register", async (req, res, next) => {
   }
 });
 
-app.get("/allusers", async (req, res, next) => {
+app.get("/allusers", auth, async (req, res, next) => {
   try {
     const allusers = await User.find();
 
@@ -74,23 +85,22 @@ app.get("/getuserbyemail", async (req, res, next) => {
   }
 })
 
-// http://localhost/5000/singleuser/5ef19ee1a358fb03277fc23d - How to test below endpoint
-app.get("/singleuser/:id", async function (req, res, next) {
+// http://localhost:5000/singleuser/5ef19ee1a358fb03277fc23d - How to test below endpoint
+app.get("/singleuser", auth, async function (req, res, next) {
   try {
-    const singleUser = await User.findById(req.params.id)
+    // req.user coming from auth function (That is what we are returning)
+    const aUser = req.user._id
 
-    if (!singleUser) {
-      return res.json({ msg: "User not found" })
-    }
+    const UserFind = await User.findById(aUser);
 
-    res.json({ user: singleUser })
+    res.json({ user: UserFind })
   } catch (err) {
     res.json({ msg: err });
     // throw err;
   }
 })
 
-app.put("/edit_user/:id", async function (req, res, next) {
+app.put("/edit_user/:id", auth, async function (req, res, next) {
   try {
     const singleUser = await User.findById(req.params.id)
 
