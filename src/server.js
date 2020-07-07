@@ -215,8 +215,9 @@ app.put("/updatepost/:postId", auth, async (req, res, next) => {
   try {
     const findPost = await Post.findById(req.params.postId);
 
+    // console.log(findPost);
     if (!findPost) {
-      return res.json({ msg: "Post Not Found" });
+      return res.json({ msg: "Post not found" });
     }
 
     const updatedPost = await Post.findByIdAndUpdate(
@@ -233,18 +234,17 @@ app.put("/updatepost/:postId", auth, async (req, res, next) => {
     res.json({ msg: err });
   }
 });
-
 // User to view post he/she Created (Protected Route)
-app.get("/viewpersonalpost", auth, async (req, res, next) => {
+app.get("/viewpersonalposts", auth, async (req, res, next) => {
   try {
-    const viewPersonalPost = await Post.find({ created_by: req.user._id });
+    const personalPosts = await Post.find({ created_by: req.user._id });
 
-    if (viewPersonalPost.length === 0) {
+    if (personalPosts.length === 0) {
       return res.json({ msg: "You have not created any posts" });
     }
 
     res.json({
-      posts: viewPersonalPost
+      post: personalPosts
     });
   } catch (err) {
     res.json({ msg: err });
