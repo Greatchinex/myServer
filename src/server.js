@@ -195,7 +195,7 @@ app.post("/createpost", auth, async (req, res, next) => {
 
     // console.log(savedPost)
 
-    const updatedPost = await User.findByIdAndUpdate(
+    const updatedUser = await User.findByIdAndUpdate(
       req.user._id,
       { $inc: { no_of_post: +1 }, $push: { created_post: savedPost._id } },
       { new: true }
@@ -209,6 +209,51 @@ app.post("/createpost", auth, async (req, res, next) => {
     res.json({ msg: err });
   }
 });
+
+// Update a single post (Protected Route) HINT: req.params
+app.put("/updatepost/:postId", auth, async (req, res, next) => {
+  try {
+    const findPost = await Post.findById(req.params.postId);
+
+    if (!findPost) {
+      return res.json({ msg: "Post Not Found" });
+    }
+
+    const updatedPost = await Post.findByIdAndUpdate(
+      req.params.postId,
+      req.body,
+      { new: true }
+    );
+
+    res.json({
+      msg: "Post updated successfully",
+      post: updatedPost
+    });
+  } catch (err) {
+    res.json({ msg: err });
+  }
+});
+
+// User to view post he/she Created (Protected Route)
+app.get("/viewpersonalpost", auth, async (req, res, next) => {
+  try {
+    const viewPersonalPost = await Post.find({ created_by: req.user._id });
+
+    if (viewPersonalPost.length === 0) {
+      return res.json({ msg: "You have not created any posts" });
+    }
+
+    res.json({
+      posts: viewPersonalPost
+    });
+  } catch (err) {
+    res.json({ msg: err });
+  }
+});
+// view all posts (Public Route)
+// View Posts by category (Protected Route)
+// View single post (Protected Route) HINT: req.params
+// Delete a single Post (Protected Route) HINT: req.params
 
 app.listen(port, () => {
   console.log("Server is listening on port " + port);
