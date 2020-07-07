@@ -5,9 +5,14 @@ const jwt = require("jsonwebtoken");
 
 dotenv.config();
 
+// DB Connection
 require("./config/db");
 
+// DB Collections
 const User = require("./models/user");
+const Post = require("./models/post");
+
+// Auth Middleware
 const auth = require("./config/middleware");
 
 const app = express();
@@ -173,6 +178,35 @@ app.delete("/removeuser/:id", async function (req, res, next) {
   } catch (err) {
     res.json({ msg: err });
     // throw err;
+  }
+});
+
+// Posts Endpoints
+app.post("/createpost", auth, async (req, res, next) => {
+  try {
+    const newPost = new Post({
+      title: req.body.title,
+      content: req.body.content,
+      category: req.body.category,
+      created_by: req.user._id
+    });
+
+    const savedPost = await newPost.save();
+
+    // console.log(savedPost)
+
+    const updatedPost = await User.findByIdAndUpdate(
+      req.user._id,
+      { $inc: { no_of_post: +1 }, $push: { created_post: savedPost._id } },
+      { new: true }
+    );
+
+    res.json({
+      msg: "Post created successfully",
+      post: savedPost
+    });
+  } catch (err) {
+    res.json({ msg: err });
   }
 });
 

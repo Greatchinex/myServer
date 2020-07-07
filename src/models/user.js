@@ -9,10 +9,16 @@ const UserSchema = new mongoose.Schema({
     type: String
   },
   password: String,
-  // is_admin: {
-  // 	type: Boolean,
-  // 	default: false
-  // }
+  created_post: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Post"
+    }
+  ],
+  no_of_post: {
+    type: Number,
+    default: 0
+  }
 });
 
 module.exports = mongoose.model("User", UserSchema);
